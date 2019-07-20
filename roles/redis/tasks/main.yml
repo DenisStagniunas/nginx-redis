@@ -1,0 +1,10 @@
+---
+- name: be sure redis is installed
+  apt:
+    name: redis-server
+    state: latest
+  become: yes
+  become_method: "{{become_method}}"
+  tags:
+    - redis
+    - core

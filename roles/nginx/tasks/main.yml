@@ -1,0 +1,125 @@
+---
+- name: be sure nginx is downloaded
+  get_url:
+    url: https://nginx.org/download/nginx-1.13.2.tar.gz
+    dest: /tmp/nginx-1.13.2.tar.gz
+    mode: '0440'
+  tags:
+    - nginx
+    - core
+
+- name: be sure nginx is extracted
+  unarchive:
+    src: /tmp/nginx-1.13.2.tar.gz
+    dest: /tmp/
+
+- name: download redis module
+  get_url:
+    url: https://github.com/openresty/redis2-nginx-module/archive/master.zip
+    dest: /tmp/redis2-nginx-module.zip
+    mode: '0440'
+
+- name: extract redis module
+  unarchive:
+    src: /tmp/redis2-nginx-module.zip
+    dest: /tmp/
+
+- name: build nginx
+  command: ./configure --prefix=/etc/nginx \
+    --sbin-path=/usr/sbin/nginx \
+    --modules-path=/usr/lib/nginx/modules \
+    --conf-path=/etc/nginx/nginx.conf \
+    --error-log-path=/var/log/nginx/error.log \
+    --pid-path=/var/run/nginx.pid \
+    --lock-path=/var/run/nginx.lock \
+    --user=nginx \
+    --group=nginx \
+    --build=Ubuntu \
+    --builddir=nginx-1.13.2 \
+    --add-module=/tmp/redis2-nginx-module-master
+  args:
+    chdir: /tmp/nginx-1.13.2
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: make nginx module
+  command: make
+  args:
+    chdir: /tmp/nginx-1.13.2
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: make install nginx module
+  command: make install
+  args:
+    chdir: /tmp/nginx-1.13.2
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: symlink nginx modules
+  file:
+    src: /usr/lib/nginx/modules
+    dest: /etc/nginx/modules
+    state: link
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: be sure nginx service is prepared
+  template:
+    src: nginx.service
+    dest: /etc/systemd/system/nginx.service
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: reload systemctl
+  command: systemctl daemon-reexec
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: add nginx user and group
+  command: adduser --system --home /nonexistent --shell /bin/false --no-create-home --disabled-login --disabled-password --gecos "nginx user" --group nginx
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: be sure nginx app location prepared
+  file:
+    path: /var/www/nginx-redis
+    state: directory
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: be sure nginx project is prepared
+  template:
+    src: index.html
+    dest: /var/www/nginx-redis/index.html
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: be sure nginx config is configured
+  template:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: create sites-enabled directory
+  file:
+    path: /etc/nginx/sites-enabled
+    state: directory
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: be sure nginx project is configured
+  template:
+    src: localhost.conf
+    dest: /etc/nginx/sites-enabled/localhost.conf
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: enable nginx
+  systemd:
+    name: nginx.service
+    state: started
+    enabled: yes
+  become: yes
+  become_method: "{{become_method}}"

@@ -1,0 +1,7 @@
+---
+- name: environment installation
+  hosts: localhost
+  roles:
+    - libs
+    - nginx
+    - redis

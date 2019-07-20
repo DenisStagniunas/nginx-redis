@@ -1,0 +1,29 @@
+---
+- name: be sure build-essential is installed
+  apt:
+    name: build-essential
+    state: latest
+  become: yes
+  become_method: "{{become_method}}"
+
+- name: be sure nginx dependencies installed
+  apt:
+    name: perl
+    state: latest
+  with_items:
+    - "libpcre3"
+    - "libpcre3-dev"
+    - "zlib1g-dev"
+    - "libperl-dev"
+    - "libgd3"
+    - "libgd-dev"
+    - "libgeoip1"
+    - "libgeoip-dev"
+    - "geoip-bin"
+    - "libxml2"
+    - "libxml2-dev"
+    - "libxslt1.1"
+    - "libxslt1-dev"
+  become: yes
+  become_method: "{{become_method}}"
+
