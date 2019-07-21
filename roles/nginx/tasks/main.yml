@@ -61,6 +61,7 @@
     src: /usr/lib/nginx/modules
     dest: /etc/nginx/modules
     state: link
+    force: yes
   become: yes
   become_method: "{{become_method}}"
 

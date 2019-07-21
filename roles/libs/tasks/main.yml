@@ -24,6 +24,7 @@
     - "libxml2-dev"
     - "libxslt1.1"
     - "libxslt1-dev"
+    - "unzip"
   become: yes
   become_method: "{{become_method}}"
 
